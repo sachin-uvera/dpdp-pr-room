@@ -54,14 +54,16 @@ Switch doesn't enforce an instruction like "don't merge". [Its docs](https://doc
 
 1. **Instructions:** neither agent is told it may merge, and PR content is treated as data, not instructions.
 2. **Agent settings:** `auto_approve` is off for both agents, and the fixer asks before each action that needs permission.
-3. **GitHub ruleset (the real gate):** the agents' GitHub account has write access only, and a required review from a different account blocks the merge. GitHub doesn't let a PR's author approve their own PR.
+3. **GitHub ruleset (the real gate):** a merge to `main` needs an approval from a code owner, and [`.github/CODEOWNERS`](.github/CODEOWNERS) names only the human reviewer. The agents' bot account has write access, so its own approval doesn't count. A push after the approval cancels it. Only repository admins can bypass, and only through a pull request; the bot isn't an admin.
+
+Three GitHub accounts take part: the developer who opens the PR, the agents' bot account, and the human reviewer who owns the code. GitHub doesn't let a PR's author approve their own PR, so the reviewer can't be the author.
 
 ## Run it
 
-You need [Switch Console](https://docs.switchagents.ai/switch-rooms/getting-started/install-switch-console), Docker, Claude Code, the GitHub CLI and two GitHub accounts. The Windows build of Console is in early access.
+You need [Switch Console](https://docs.switchagents.ai/switch-rooms/getting-started/install-switch-console), Docker, Claude Code, the GitHub CLI and three GitHub accounts (developer, agent bot, reviewer). The Windows build of Console is in early access.
 
-1. **Set up the target repository.** It should be public, because GitHub Free doesn't enforce rulesets on private repositories. Give the agent account write access, not admin.
-2. **Add the ruleset.** Go to Settings > Rules > Rulesets > New branch ruleset and target the default branch. Turn on "Require a pull request before merging" with 1 approval, block force pushes, and leave the bypass list empty.
+1. **Set up the target repository.** It should be public, because GitHub Free doesn't enforce rulesets on private repositories. Give the agent bot account write access, not admin, and list the reviewer in `.github/CODEOWNERS`.
+2. **Add the ruleset.** Go to Settings > Rules > Rulesets > New branch ruleset and target the default branch. Turn on "Require a pull request before merging" with 1 approval, "Require review from Code Owners", "Dismiss stale approvals when new commits are pushed" and "Require approval of the most recent reviewable push". Block force pushes and deletion. In the bypass list, allow only Repository admin, for pull requests only.
 3. **Start Switch.** In Console, choose **On this computer**. A local server comes with Mattermost, so you don't need a Slack workspace.
 4. **Sign the agent account in on that machine.** Run `gh auth login` and choose the agent account.
 5. **Create the room.** Go to Templates > Import template, choose `templates/dpdp-pr-room.template.yaml`, then select **Use** and enter your repository URL.
@@ -71,7 +73,7 @@ You need [Switch Console](https://docs.switchagents.ai/switch-rooms/getting-star
 
 ## Demo plan
 
-1. Open a PR in a demo repository with planted problems: an Aadhaar number in a log line, a signup with no consent record, and a delete handler that leaves the data in place.
+1. The developer opens a PR against the small user service in [`demo/`](demo/) with planted problems: an Aadhaar number in a log line, a signup with no consent record, and a delete handler that leaves the data in place. `cd demo && npm test` runs its tests with Node's built-in runner.
 2. The auditor posts cited findings and blocks the PR.
 3. The fixer patches the PR branch after a person approves the push, and the auditor re-checks it.
 4. The agent tries to merge and GitHub refuses.

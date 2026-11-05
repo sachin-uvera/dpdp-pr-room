@@ -1,0 +1,9 @@
+{
+  "name": "dpdp-demo-app",
+  "private": true,
+  "type": "module",
+  "description": "Tiny user service the DPDP PR room reviews in the demo",
+  "scripts": {
+    "test": "node --test"
+  }
+}
