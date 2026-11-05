@@ -24,15 +24,10 @@ params:
     type: bridge
     description: Where the room is mirrored. Mattermost comes with a local Switch server.
     default: [Mattermost, $first]
-  provider:
-    type: provider
-    description: The coding agent behind both agents
-    default: [claude, codex, opencode]
-    input: advanced
-  location:
-    type: location
+  machine:
+    type: machine
     description: The machine both agents run on
-    default: local
+    default: [$first]
     input: advanced
   directory:
     type: directory
@@ -45,8 +40,8 @@ agents:
     display_name: DPDP Auditor
     description: Reviews pull requests against DPDP and reports cited findings
     addressing: anyone
-    provider: "{provider}"
-    location: "{location}"
+    provider: claude
+    machine: "{machine}"
     directory: "{directory}"
     auto_mode: true
     auto_approve: false
@@ -88,8 +83,8 @@ agents:
     display_name: DPDP Fixer
     description: Patches findings on the pull request branch; never merges
     addressing: owner-agents
-    provider: "{provider}"
-    location: "{location}"
+    provider: claude
+    machine: "{machine}"
     directory: "{directory}"
     auto_mode: false
     auto_approve: false

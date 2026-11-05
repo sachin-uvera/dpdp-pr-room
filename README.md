@@ -58,7 +58,7 @@ Switch doesn't enforce an instruction like "don't merge". [Its docs](https://doc
 
 ## Run it
 
-You need [Switch Console](https://docs.switchagents.ai/switch-rooms/getting-started/install-switch-console), Docker, Claude Code (or Codex or OpenCode), the GitHub CLI and two GitHub accounts. The Windows build of Console is in early access.
+You need [Switch Console](https://docs.switchagents.ai/switch-rooms/getting-started/install-switch-console), Docker, Claude Code, the GitHub CLI and two GitHub accounts. The Windows build of Console is in early access.
 
 1. **Set up the target repository.** It should be public, because GitHub Free doesn't enforce rulesets on private repositories. Give the agent account write access, not admin.
 2. **Add the ruleset.** Go to Settings > Rules > Rulesets > New branch ruleset and target the default branch. Turn on "Require a pull request before merging" with 1 approval, block force pushes, and leave the bypass list empty.
