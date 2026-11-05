@@ -35,7 +35,7 @@ sequenceDiagram
 
 | Member | Job | Limits |
 |---|---|---|
-| `dpdp-auditor` | Reviews diffs using the [DPDP dev skill](https://github.com/sachin-uvera/kavach-dpdp/tree/main/skills/dpdp-claude-dev-skill) | Doesn't change code |
+| `dpdp-auditor` | Reviews diffs using the [DPDP dev skill](https://github.com/sachin-uvera/dpdp-by-uvera/tree/main/skills/dpdp-claude-dev-skill) | Doesn't change code |
 | `dpdp-fixer` | Patches findings on the PR branch | Asks before acting (`auto_mode: false`); takes requests only from its owner and their agents |
 | Human reviewer | Settles legal questions and makes the merge decision | Holds the only approval that counts |
 

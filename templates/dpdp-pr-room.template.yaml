@@ -53,7 +53,7 @@ agents:
     repo: "{repo_url}"
     sources:
       - label: DPDP dev skill (review mode and report template)
-        url: https://github.com/sachin-uvera/kavach-dpdp/blob/main/skills/dpdp-claude-dev-skill/SKILL.md
+        url: https://github.com/sachin-uvera/dpdp-by-uvera/blob/main/skills/dpdp-claude-dev-skill/SKILL.md
     instructions: |
       You review pull requests on {repo_url} for compliance with India's DPDP
       Act 2023 and DPDP Rules 2025. You never change code, push, approve or
