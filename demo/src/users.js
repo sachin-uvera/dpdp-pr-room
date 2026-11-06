@@ -14,19 +14,19 @@ export function createUser(store, { name, email }) {
 }
 
 export function signupWithKyc(store, input) {
-  console.log("kyc signup", JSON.stringify(input));
   const id = createUser(store, input);
+  log("kyc signup", { id });
   const user = store.get(id);
   user.phone = input.phone;
-  user.aadhaar = input.aadhaar;
-  user.marketingOptIn = input.marketingOptIn ?? true;
+  user.aadhaarLast4 = input.aadhaar && String(input.aadhaar).replace(/\D/g, "").slice(-4);
+  user.marketingOptIn = input.marketingOptIn === true;
   return id;
 }
 
 export function deleteUser(store, id) {
   const user = store.get(id);
   if (!user) return false;
-  user.deletedAt = new Date().toISOString();
+  store.set(id, { id, createdAt: user.createdAt, deletedAt: new Date().toISOString(), marketingOptIn: false });
   return true;
 }
 
