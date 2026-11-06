@@ -2,7 +2,9 @@
 
 A team chat room where AI agents and a person review pull requests against India's Digital Personal Data Protection Act 2023 and DPDP Rules 2025. Built on [Switch](https://github.com/sandbox-quantum/switch) for the [Flip the Switch Hackathon](https://www.wemakedevs.org/hackathons/switch), Track 01: Best Business Workflow.
 
-**Status: in progress.** The room template passes Switch's own template checks. It has not yet been run end to end, and the demo repository and video are still to come.
+**Status: working end to end** on Switch Console 0.40.1 for Windows with a local Switch server and Mattermost. The auditor has reviewed a real pull request ([#1](https://github.com/sachin-uvera/dpdp-pr-room/pull/1)) and handed its findings to the fixer.
+
+**Demo video:** _link to come_
 
 ## The problem
 
@@ -19,7 +21,7 @@ sequenceDiagram
     participant GH as GitHub
     actor Rev as Human reviewer
 
-    Dev->>Room: @dpdp-auditor review PR #7
+    Dev->>Room: @uvera-dpdp-auditor review PR #7
     Room->>Auditor: Mention
     Auditor->>GH: Read the diff
     Auditor->>Room: Findings with file:line and S./R. citations
@@ -38,6 +40,23 @@ sequenceDiagram
 | `dpdp-auditor` | Reviews diffs using the [DPDP dev skill](https://github.com/sachin-uvera/dpdp-by-uvera/tree/main/skills/dpdp-claude-dev-skill) | Doesn't change code |
 | `dpdp-fixer` | Patches findings on the PR branch | Asks before acting (`auto_mode: false`); takes requests only from its owner and their agents |
 | Human reviewer | Settles legal questions and makes the merge decision | Holds the only approval that counts |
+
+## What a review looks like
+
+This is the auditor's verdict on [PR #1](https://github.com/sachin-uvera/dpdp-pr-room/pull/1), which adds KYC signup and account deletion to the [`demo/`](demo/) service. The PR's own tests pass.
+
+> **2026-11-06 · PR #1 · `7aed660` · BLOCK**
+>
+> - **F1 Critical:** raw Aadhaar, phone and email written to the log (`users.js:17`)
+> - **F2 Critical:** the full Aadhaar number is stored and returned in plaintext (`users.js:21, 35`)
+> - **F3 High:** marketing consent is on by default (`users.js:22`)
+> - **F4 High:** deletion only sets `deletedAt`, so the personal data stays (`users.js:26-31`)
+> - **F5 Medium:** no consent record
+> - **F6 Medium:** phone number collected with no stated purpose
+>
+> F1–F4 handed to the fixer. Merge decision: pending (person).
+
+Three problems were planted: the log line, the default opt-in and the soft delete. The auditor also found F2, F5 and F6.
 
 ## Why this needs Switch
 
@@ -65,19 +84,39 @@ You need [Switch Console](https://docs.switchagents.ai/switch-rooms/getting-star
 1. **Set up the target repository.** It should be public, because GitHub Free doesn't enforce rulesets on private repositories. Give the agent bot account write access, not admin, and list the reviewer in `.github/CODEOWNERS`.
 2. **Add the ruleset.** Go to Settings > Rules > Rulesets > New branch ruleset and target the default branch. Turn on "Require a pull request before merging" with 1 approval, "Require review from Code Owners", "Dismiss stale approvals when new commits are pushed" and "Require approval of the most recent reviewable push". Block force pushes and deletion. In the bypass list, allow only Repository admin, for pull requests only.
 3. **Start Switch.** In Console, choose **On this computer**. A local server comes with Mattermost, so you don't need a Slack workspace.
-4. **Sign the agent account in on that machine.** Run `gh auth login` and choose the agent account.
+4. **Sign the agent account in on that machine.** Run `gh auth login`, sign in as the agent bot account, then `gh auth switch --user <bot>`. In each agent's working directory, clone the repository and make git use the bot's `gh` login instead of a saved one:
+
+   ```sh
+   git config credential.helper ""
+   git config --add credential.helper '!gh auth git-credential'
+   git config credential.https://github.com.username <bot>
+   git config user.name <bot>
+   ```
 5. **Create the room.** Go to Templates > Import template, choose `templates/dpdp-pr-room.template.yaml`, then select **Use** and enter your repository URL.
 6. **Start a review.** In the room, post `@uvera-dpdp-auditor review PR #1`. Agent names start with the team prefix you entered, `uvera` by default.
 
 **Check the gate before relying on it.** From the agent account, run `gh pr merge <number> --merge` on an unapproved PR. It must fail.
 
-## Demo plan
+## Running Switch Console on Windows
+
+Console's Windows build is in early access. These are the problems we hit with 0.40.1 and how this project works around them.
+
+- **Use a `machine` param, not `location`.** On a server that manages agents, Console stores your computer's machine id in a `location` param and then treats that id as an SSH host, so it finds no agent CLI. A `machine` param resolves to "This computer".
+- **Name the provider in the template.** On Windows, Console offers no local choices for a `provider` param ("SDK sessions require a POSIX SSH execution host"). The template sets `provider: claude` on each agent.
+- **Check before retrying Create all.** Console can time out ("Could not reach the server") while the server is still creating the agents and the room. Look in Your Rooms before running it again.
+- **Let the agent create its own log.** Only a room document's creator can edit it, so a document the template creates is read-only for the agents.
+- **Stop the local server before restarting Windows.** A forced shutdown killed the bundled Postgres and left the server stopped after reboot.
+
+## Demo
 
 1. The developer opens a PR against the small user service in [`demo/`](demo/) with planted problems: an Aadhaar number in a log line, a signup with no consent record, and a delete handler that leaves the data in place. `cd demo && npm test` runs its tests with Node's built-in runner.
 2. The auditor posts cited findings and blocks the PR.
 3. The fixer patches the PR branch after a person approves the push, and the auditor re-checks it.
 4. The agent tries to merge and GitHub refuses.
 5. A person approves on GitHub and merges, and the log records it.
+
+<!-- Screenshots: add docs/img/findings.png, docs/img/merge-refused.png and docs/img/audit-log.png after recording -->
+
 
 ## Limits
 
