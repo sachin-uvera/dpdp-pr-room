@@ -12,7 +12,7 @@ So I built **DPDP PR Room**: a team chat room where two AI agents and a person r
 - **`dpdp-fixer`** takes the Critical and High findings, says what it will change, waits for a person to approve, and pushes the smallest fix to the PR's branch. It never merges.
 - **A person** settles anything that needs legal judgment and makes the merge decision.
 
-Someone posts `@uvera-dpdp-auditor review PR #4` in the room. Everything after that happens in one thread: findings, hand-off, fix, re-check and decision. The auditor also keeps a room document, `dpdp-audit-log`, with one entry per verdict.
+Someone posts `@uvera-dpdp-auditor review PR #6` in the room. Everything after that happens in one thread: findings, hand-off, fix, re-check and decision. The auditor also keeps a room document, `dpdp-audit-log`, with one entry per verdict.
 
 ## A prompt is not a gate
 

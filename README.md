@@ -77,6 +77,8 @@ Switch doesn't enforce an instruction like "don't merge". [Its docs](https://doc
 
 Three GitHub accounts take part: the developer who opens the PR, the agents' bot account, and the human reviewer who owns the code. GitHub doesn't let a PR's author approve their own PR, so the reviewer can't be the author.
 
+**The admin bypass is a person's choice, and it's logged.** On a PR page, an admin sees "Merge without waiting for requirements". That's how PR #1 was merged by mistake, with its findings unfixed. GitHub recorded it as a bypass by the admin under Settings > Rules > Insights, and it was reverted in a follow-up PR. The bot can't do this, because it isn't an admin. If you want no bypass at all, empty the bypass list and add a second code owner to approve maintenance PRs.
+
 ## Run it
 
 You need [Switch Console](https://docs.switchagents.ai/switch-rooms/getting-started/install-switch-console), Docker, Claude Code, the GitHub CLI and three GitHub accounts (developer, agent bot, reviewer). The Windows build of Console is in early access.
