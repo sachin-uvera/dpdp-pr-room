@@ -43,11 +43,11 @@ GitHub names the person it's waiting for. I approved as code owner, merged with 
 
 To test it, I planted three problems in a small Node user service: a signup that writes the whole request to the log, marketing opt-in on by default, and a "delete" that only sets `deletedAt`. The PR's tests pass, because tests don't check for privacy problems.
 
-The auditor's verdict on PR #1:
+The auditor's verdict ("S." is a section of the DPDP Act, "R." a rule of the DPDP Rules):
 
-> **BLOCK** · F1 Critical: raw Aadhaar, phone and email logged · F2 Critical: plaintext Aadhaar stored and returned in full · F3 High: marketing consent on by default · F4 High: soft delete keeps personal data · F5 Medium: no consent record · F6 Medium: phone collected with no stated purpose
+> **BLOCK** · F1 Critical: raw Aadhaar, phone and email logged (S.8(5), R.6(1)(a)) · F2 Critical: plaintext Aadhaar stored and returned in full (S.8(5), R.6(1)(a)) · F3 High: marketing consent on by default (S.6(1)) · F4 High: soft delete keeps personal data (S.8(7)(a), S.12(3)) · F5 Medium: no consent record (S.6(10)) · F6 Medium: phone collected with no stated purpose (S.6(1))
 
-It found all three planted problems and three I hadn't planted. It handed F1–F4 to the fixer and left the Medium findings, and the merge, to a person.
+It found all three planted problems and three I hadn't planted. It handed F1–F4 to the fixer and left the Medium findings, and the merge, to a person. It also asked me four questions it couldn't answer itself: whether the service may do Aadhaar-based KYC at all, whether a law such as PMLA requires keeping KYC records after deletion, whether under-18s can sign up, and where the privacy notice is shown. Those are legal calls, and the room is where a person answers them.
 
 ## Running Switch Console on Windows
 
