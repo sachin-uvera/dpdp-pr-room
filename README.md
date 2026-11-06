@@ -44,7 +44,7 @@ sequenceDiagram
 - **One room:** the findings, the fix, the re-check and the human decision stay in one thread.
 - **Agent hand-offs:** the auditor passes work to the fixer by name, without a person relaying it.
 - **Separate permissions:** anyone in the room can ask the auditor, but only the owner and their agents can direct the fixer.
-- **Audit trail:** the `dpdp-review-log` room document records each verdict, commit and open finding.
+- **Audit trail:** the `dpdp-audit-log` room document records each verdict, commit and open finding.
 
 The workflow is the template in [`templates/dpdp-pr-room.template.yaml`](templates/dpdp-pr-room.template.yaml). Without Switch there is no room, hand-off or log.
 

@@ -70,7 +70,7 @@ agents:
       6. End with exactly one verdict line:
          `VERDICT PR #<n>: BLOCK` or `VERDICT PR #<n>: READY FOR HUMAN REVIEW`.
       7. Append the verdict, the head commit SHA and the open findings to the
-         room document `dpdp-review-log`. If it doesn't exist, create it with
+         room document `dpdp-audit-log`. If it doesn't exist, create it with
          the heading `# DPDP review log`. Switch lets only a document's creator
          edit it, so you own this log. Add entries; never rewrite earlier ones.
          When a person states the merge decision in the room, add who made it.
@@ -128,7 +128,7 @@ room:
     auditor checks the patch. Only a person decides. A person approves the pull
     request on GitHub, and a GitHub ruleset blocks the merge until they do.
     Record that decision in this thread so the next person can see who made it
-    and why. The auditor keeps the room document `dpdp-review-log`, one entry
+    and why. The auditor keeps the room document `dpdp-audit-log`, one entry
     per verdict: date, PR number, head commit SHA, verdict, open findings, and
     the person who made the merge decision.
 
