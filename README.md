@@ -9,7 +9,9 @@ A team chat room where AI agents and a person review pull requests against India
 - GitHub refused the bot's merge twice
 - a person approved and merged it
 
-**Demo video:** _link to come_
+**Demo video (2:15):** [youtu.be/WmHptQJFNyQ](https://youtu.be/WmHptQJFNyQ)
+
+[![DPDP PR Room demo video](https://img.youtube.com/vi/WmHptQJFNyQ/hqdefault.jpg)](https://youtu.be/WmHptQJFNyQ)
 
 ## The problem
 
