@@ -6,13 +6,15 @@ Most of India's Digital Personal Data Protection duties for developers apply fro
 
 So I built **DPDP PR Room**: a team chat room where two AI agents and a person review pull requests against the DPDP Act 2023 and DPDP Rules 2025. It runs on [Switch](https://github.com/sandbox-quantum/switch), and the code is at [sachin-uvera/dpdp-pr-room](https://github.com/sachin-uvera/dpdp-pr-room).
 
+**Watch the demo (2:15):** [youtu.be/WmHptQJFNyQ](https://youtu.be/WmHptQJFNyQ)
+
 ## Who is in the room
 
 - **`dpdp-auditor`** reads the PR's diff, reviews it with our open-source [DPDP dev skill](https://github.com/sachin-uvera/dpdp-by-uvera), and posts findings with file and line, the DPDP section or rule, severity and a fix, in the room and as a comment on the PR. It never changes code.
 - **`dpdp-fixer`** takes the Critical and High findings, says what it will change, waits for a person to approve, and pushes the smallest fix to the PR's branch. It never merges.
 - **A person** settles anything that needs legal judgment and makes the merge decision.
 
-Someone posts `@uvera-dpdp-auditor review PR #7` in the room. Everything after that happens in one thread: findings, hand-off, fix, re-check and decision. The auditor also keeps a room document, `dpdp-audit-log`, with one entry per verdict.
+When a PR changes the app's code, a small watcher posts `@uvera-dpdp-auditor review PR #7` in the room. Everything after that happens in one thread: findings, hand-off, fix, re-check and decision. The auditor also keeps a room document, `dpdp-audit-log`, with one entry per verdict.
 
 ## A prompt is not a gate
 
@@ -37,6 +39,8 @@ GraphQL: Repository rule violations found
 Waiting on code owner review from sachin-uvera.
 ```
 
+![The same refusal in the demo video: the bot's merge of PR #8 with --admin](https://raw.githubusercontent.com/sachin-uvera/dpdp-pr-room/main/docs/img/merge-refused.png)
+
 GitHub names the person it's waiting for. I approved as code owner, merged with the normal button, and the ruleset log recorded the bot's attempt as a fail and my merge as a pass.
 
 ## What the auditor found
@@ -46,6 +50,8 @@ To test it, I planted three problems in a small Node user service: a signup that
 The auditor's verdict ("S." is a section of the DPDP Act, "R." a rule of the DPDP Rules):
 
 > **BLOCK** · F1 Critical: raw Aadhaar, phone and email logged (S.8(5), R.6(1)(a)) · F2 Critical: plaintext Aadhaar stored and returned in full (S.8(5), R.6(1)(a)) · F3 High: marketing consent on by default (S.6(1)) · F4 High: soft delete keeps personal data (S.8(7)(a), S.12(3)) · F5 Medium: no consent record (S.6(10)) · F6 Medium: phone collected with no stated purpose (S.6(1))
+
+![The auditor's findings in the Switch room, with the Law column](https://raw.githubusercontent.com/sachin-uvera/dpdp-pr-room/main/docs/img/findings.png)
 
 It found all three planted problems and three I hadn't planted. It handed F1–F4 to the fixer and left the Medium findings, and the merge, to a person. It also asked me four questions it couldn't answer itself: whether the service may do Aadhaar-based KYC at all, whether a law such as PMLA requires keeping KYC records after deletion, whether under-18s can sign up, and where the privacy notice is shown. Those are legal calls, and the room is where a person answers them.
 
@@ -69,4 +75,4 @@ This is an engineering aid, not legal advice. The auditor says which checks pass
 
 - Code: [github.com/sachin-uvera/dpdp-pr-room](https://github.com/sachin-uvera/dpdp-pr-room)
 - DPDP skill: [github.com/sachin-uvera/dpdp-by-uvera](https://github.com/sachin-uvera/dpdp-by-uvera)
-- Demo video: _link to come_
+- Demo video (2:15): [youtu.be/WmHptQJFNyQ](https://youtu.be/WmHptQJFNyQ)

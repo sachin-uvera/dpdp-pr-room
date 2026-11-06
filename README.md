@@ -9,7 +9,9 @@ A team chat room where AI agents and a person review pull requests against India
 - GitHub refused the bot's merge twice
 - a person approved and merged it
 
-**Demo video:** _link to come_
+**Demo video (2:15):** [youtu.be/WmHptQJFNyQ](https://youtu.be/WmHptQJFNyQ)
+
+[![DPDP PR Room demo video](https://img.youtube.com/vi/WmHptQJFNyQ/hqdefault.jpg)](https://youtu.be/WmHptQJFNyQ)
 
 ## The problem
 
@@ -98,7 +100,7 @@ Three GitHub accounts take part: the developer who opens the PR, the agents' bot
 
 **The admin bypass is a person's choice, and it's logged.** On a PR page, an admin sees "Merge without waiting for requirements". The bot can't do this, because it isn't an admin. In this repository, GitHub's ruleset log (Settings > Rules > Insights) shows two kinds of bypass, all by the human admin:
 
-- **On purpose:** maintenance PRs the reviewer wrote (docs, template fixes and reverts: #2, #3, #4, #6, #8). The reviewer is the only code owner and can't approve their own PR.
+- **On purpose:** maintenance PRs the reviewer wrote (docs, screenshots, template fixes and reverts: #2, #3, #4, #6, #8, #9, #10). The reviewer is the only code owner and can't approve their own PR.
 - **By mistake:** [PR #1](https://github.com/sachin-uvera/dpdp-pr-room/pull/1) was merged with its findings unfixed, then reverted in [PR #4](https://github.com/sachin-uvera/dpdp-pr-room/pull/4).
 
 That mistake is why the bypass list matters. If you want no bypass at all, empty the bypass list and add a second code owner to approve maintenance PRs.
