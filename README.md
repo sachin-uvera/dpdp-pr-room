@@ -82,7 +82,7 @@ A GitHub Action could run the same review and comment on the PR. The auditor her
 | Anyone in the room can ask the auditor, but only the owner and their agents can direct the fixer | Per-agent `addressing` | Whoever can push or comment triggers everything |
 | The auditor asks the reviewer about Aadhaar KYC and PMLA retention, and the answer shapes the fix | A person in the same thread as the agents | Questions sit in a PR comment until someone reruns the job |
 | `dpdp-audit-log` keeps one entry per verdict, commit and decision | Room documents the agents write | Logs scattered across workflow runs |
-| The same room works on Mattermost, Slack or Discord | The `bridge` parameter in the template | A different integration per chat app |
+| The same room can be created on Mattermost, Slack or Discord (tested on Mattermost) | The `bridge` parameter in the template | A different integration per chat app |
 
 ![The fixer stops and asks permission in the room thread: Allow once, Allow for this session, or Decline](docs/img/allow-once.png)
 
@@ -96,11 +96,11 @@ Switch doesn't enforce an instruction like "don't merge". [Its docs](https://doc
 2. **Agent settings:** `auto_approve` is off for both agents, and the fixer asks before each action that needs permission.
 3. **GitHub ruleset (the real gate):** a merge to `main` needs an approval from a code owner, and [`.github/CODEOWNERS`](.github/CODEOWNERS) names only the human reviewer. The agents' bot account has write access, so its own approval doesn't count. A push after the approval cancels it. Only repository admins can bypass, and only through a pull request; the bot isn't an admin.
 
-Three GitHub accounts take part: the developer who opens the PR, the agents' bot account, and the human reviewer who owns the code. GitHub doesn't let a PR's author approve their own PR, so the reviewer can't be the author.
+Three GitHub accounts take part: the developer who opens the PR, the agents' bot account, and the human reviewer who owns the code. GitHub doesn't let a PR's author approve their own PR, so the reviewer can't be the author. In this repository, all three accounts belong to the entrant, Sachin Upadhyay, and exist only to separate those roles.
 
 **The admin bypass is a person's choice, and it's logged.** On a PR page, an admin sees "Merge without waiting for requirements". The bot can't do this, because it isn't an admin. In this repository, GitHub's ruleset log (Settings > Rules > Insights) shows two kinds of bypass, all by the human admin:
 
-- **On purpose:** maintenance PRs the reviewer wrote (docs, screenshots, template fixes and reverts: #2, #3, #4, #6, #8, #9, #10). The reviewer is the only code owner and can't approve their own PR.
+- **On purpose:** maintenance PRs the reviewer wrote (docs, screenshots, template fixes and reverts: #2, #3, #4, #6, #8, #9, #10, #11). The reviewer is the only code owner and can't approve their own PR.
 - **By mistake:** [PR #1](https://github.com/sachin-uvera/dpdp-pr-room/pull/1) was merged with its findings unfixed, then reverted in [PR #4](https://github.com/sachin-uvera/dpdp-pr-room/pull/4).
 
 That mistake is why the bypass list matters. If you want no bypass at all, empty the bypass list and add a second code owner to approve maintenance PRs.
@@ -200,6 +200,10 @@ Console's Windows build is in early access. These are the problems we hit with 0
 - The watcher polls GitHub from the machine running Switch, because a local Switch server has no public address for GitHub to send webhooks to. A hosted Switch server could use Switch's GitHub connector instead.
 - The watcher's webhook posts in the room as the person who created it, and the agents act on those posts. Anyone who has the webhook URL can therefore direct both agents. Keep the URL out of the repository; this project keeps it in a file outside the clone. The webhook is locked to the review room, and a merge still needs the code owner's approval on GitHub.
 - The auditor runs in auto mode, so it uses `gh` without asking. Its instructions limit it to reading and commenting, but the bot account's write access is what really limits it. Give the auditor a read-only token if you want that enforced too.
+
+## Licence
+
+MIT, copyright Sachin Upadhyay. See [`LICENSE`](LICENSE).
 
 ## Credits
 
