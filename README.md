@@ -25,6 +25,7 @@ sequenceDiagram
     Room->>Auditor: Mention
     Auditor->>GH: Read the diff
     Auditor->>Room: Findings with file:line and S./R. citations
+    Auditor->>GH: Same findings as a PR comment
     Auditor->>Fixer: Hand off Critical and High findings
     Fixer->>Room: Planned change, asks for approval
     Rev->>Room: Approve the push
@@ -43,29 +44,37 @@ sequenceDiagram
 
 ## What a review looks like
 
-This is the auditor's verdict on [PR #1](https://github.com/sachin-uvera/dpdp-pr-room/pull/1), which adds KYC signup and account deletion to the [`demo/`](demo/) service. The PR's own tests pass.
+This is the auditor's review of [PR #5](https://github.com/sachin-uvera/dpdp-pr-room/pull/5), which adds KYC signup and account deletion to the [`demo/`](demo/) service. The PR's own tests pass. "S." is a section of the DPDP Act 2023; "R." is a rule of the DPDP Rules 2025.
 
-> **2026-11-06 · PR #1 · `7aed660` · BLOCK**
->
-> - **F1 Critical:** raw Aadhaar, phone and email written to the log (`users.js:17`)
-> - **F2 Critical:** the full Aadhaar number is stored and returned in plaintext (`users.js:21, 35`)
-> - **F3 High:** marketing consent is on by default (`users.js:22`)
-> - **F4 High:** deletion only sets `deletedAt`, so the personal data stays (`users.js:26-31`)
-> - **F5 Medium:** no consent record
-> - **F6 Medium:** phone number collected with no stated purpose
->
-> F1–F4 handed to the fixer. Merge decision: pending (person).
+| # | Finding | Evidence | Law | Severity |
+|---|---|---|---|---|
+| F1 | The full signup input, including Aadhaar, phone and email, is logged raw, skipping the masking logger | `users.js:17` | S.8(5), R.6(1)(a) | Critical |
+| F2 | The Aadhaar number is stored in plaintext and returned in full | `users.js:21, 35` | S.8(5), R.6(1)(a) | Critical |
+| F3 | Marketing consent is on when the user gave no answer | `users.js:22` | S.6(1) | High |
+| F4 | Deletion only sets `deletedAt`; all personal data stays | `users.js:26-31` | S.8(7)(a), S.12(3) | High |
+| F5 | No consent record for marketing | `users.js:22` | S.6(10) | Medium |
+| F6 | Phone number collected with no stated purpose | `users.js:20` | S.6(1) | Medium |
+
+Every finding also names the fix. The auditor handed F1–F4 to the fixer and raised four questions for the human reviewer: whether the service may do Aadhaar-based KYC under the Aadhaar Act, whether a law such as PMLA requires keeping KYC records after deletion, whether under-18s can sign up (S.9), and where the S.5(1)/R.3 notice is shown.
+
+The fixer's commit `f29797f` logged only the id, kept just the last 4 Aadhaar digits, made opt-in explicit and removed personal data on delete. On re-review, the auditor closed F1–F4, left F5 and F6 open for a follow-up, and ended with `VERDICT PR #5: READY FOR HUMAN REVIEW`.
 
 Three problems were planted: the log line, the default opt-in and the soft delete. The auditor also found F2, F5 and F6.
 
 ## Why this needs Switch
 
-- **One room:** the findings, the fix, the re-check and the human decision stay in one thread.
-- **Agent hand-offs:** the auditor passes work to the fixer by name, without a person relaying it.
-- **Separate permissions:** anyone in the room can ask the auditor, but only the owner and their agents can direct the fixer.
-- **Audit trail:** the `dpdp-audit-log` room document records each verdict, commit and open finding.
+A GitHub Action could run the same review and comment on the PR. The auditor here does that too. What an Action can't do is the part where people and agents work together while the fix is happening:
 
-The workflow is the template in [`templates/dpdp-pr-room.template.yaml`](templates/dpdp-pr-room.template.yaml). Without Switch there is no room, hand-off or log.
+| In this room | What Switch provides | With a GitHub Action alone |
+|---|---|---|
+| The fixer asks before each command, and a person clicks **Allow once** in chat | Permission requests from a running agent, answered in chat | The job runs start to finish; nobody can approve a step midway |
+| The auditor hands F1–F4 to the fixer by name, and re-checks its commit | Agents addressing each other in one room | Separate jobs with no conversation; a person relays the results |
+| Anyone in the room can ask the auditor, but only the owner and their agents can direct the fixer | Per-agent `addressing` | Whoever can push or comment triggers everything |
+| The auditor asks the reviewer about Aadhaar KYC and PMLA retention, and the answer shapes the fix | A person in the same thread as the agents | Questions sit in a PR comment until someone reruns the job |
+| `dpdp-audit-log` keeps one entry per verdict, commit and decision | Room documents the agents write | Logs scattered across workflow runs |
+| The same room works on Mattermost, Slack or Discord | The `bridge` parameter in the template | A different integration per chat app |
+
+The workflow is the template in [`templates/dpdp-pr-room.template.yaml`](templates/dpdp-pr-room.template.yaml). Take Switch away and you lose the live approvals, the hand-off and the shared thread. What's left is a review bot.
 
 ## What actually enforces the approval
 
@@ -140,4 +149,4 @@ Console's Windows build is in early access. These are the problems we hit with 0
 ## Credits
 
 - [Switch](https://github.com/sandbox-quantum/switch) by SandboxAQ provides the rooms, agent hand-offs and chat bridge.
-- The DPDP dev skill is by [Uvera Innovation Hub](https://uvera.tech), under the MIT licence.
+- The DPDP dev skill is by [Uvera Innovation Hub](https://uvera.tech), under the MIT licence. It existed before this hackathon (last updated 29 September 2026) and is used here unchanged, as the auditor's reference. Everything in this repository was built for the hackathon.

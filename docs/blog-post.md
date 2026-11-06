@@ -8,7 +8,7 @@ So I built **DPDP PR Room**: a team chat room where two AI agents and a person r
 
 ## Who is in the room
 
-- **`dpdp-auditor`** reads the PR's diff, reviews it with our open-source [DPDP dev skill](https://github.com/sachin-uvera/dpdp-by-uvera), and posts findings with file and line, severity and a fix. It never changes code.
+- **`dpdp-auditor`** reads the PR's diff, reviews it with our open-source [DPDP dev skill](https://github.com/sachin-uvera/dpdp-by-uvera), and posts findings with file and line, the DPDP section or rule, severity and a fix, in the room and as a comment on the PR. It never changes code.
 - **`dpdp-fixer`** takes the Critical and High findings, says what it will change, waits for a person to approve, and pushes the smallest fix to the PR's branch. It never merges.
 - **A person** settles anything that needs legal judgment and makes the merge decision.
 
