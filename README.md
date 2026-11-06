@@ -21,7 +21,8 @@ sequenceDiagram
     participant GH as GitHub
     actor Rev as Human reviewer
 
-    Dev->>Room: @uvera-dpdp-auditor review PR #7
+    Dev->>GH: Open a PR that changes demo/
+    Note over Room: The watcher posts @uvera-dpdp-auditor review PR #7
     Room->>Auditor: Mention
     Auditor->>GH: Read the diff
     Auditor->>Room: Findings with file:line and S./R. citations
@@ -104,7 +105,21 @@ You need [Switch Console](https://docs.switchagents.ai/switch-rooms/getting-star
    git config user.name <bot>
    ```
 5. **Create the room.** Go to Templates > Import template, choose `templates/dpdp-pr-room.template.yaml`, then select **Use** and enter your repository URL.
-6. **Start a review.** In the room, post `@uvera-dpdp-auditor review PR #1`. Agent names start with the team prefix you entered, `uvera` by default.
+6. **Start reviews automatically.** Create an incoming webhook for the room in Mattermost, as your own user. With Console's local server, you can do it without a password:
+
+   ```sh
+   docker exec switchdash-local-mattermost-mattermost-1 mmctl --local webhook create-incoming \
+     --channel switch:uvera-dpdp-review --user <your Mattermost username> \
+     --display-name "DPDP PR watcher" --lock-to-channel
+   ```
+
+   Put `DPDP_WEBHOOK_URL=http://127.0.0.1:<mattermost port>/hooks/<id>` in a file outside the repo, then start the watcher:
+
+   ```sh
+   node --env-file=../dpdp-watcher.env scripts/watch-prs.mjs
+   ```
+
+   Every minute, it lists open PRs with `gh`. When a new one changes `demo/`, it posts `@uvera-dpdp-auditor review PR #N` in the room. Switch passes that to the auditor like any message from you. On its first run, it marks PRs that are already open as seen. Use `--dry-run` to see what it would post, `DPDP_WATCH_PATHS` to watch other folders, and `DPDP_POLL_SECONDS` to poll faster. You can also start a review by hand: post `@uvera-dpdp-auditor review PR #<n>`. Agent names start with the team prefix you entered, `uvera` by default.
 
 **Check the gate before relying on it.** From the agent account, run `gh pr merge <number> --merge` on an unapproved PR. It must fail. On [PR #5](https://github.com/sachin-uvera/dpdp-pr-room/pull/5), after the fixer's push and the auditor's "ready for human review" verdict, the bot got:
 
@@ -144,7 +159,7 @@ Console's Windows build is in early access. These are the problems we hit with 0
 
 - This is an engineering aid, not legal advice. It reports which checks passed and never says a change is legally compliant.
 - Sector rules (RBI, SEBI, IRDAI, health, telecom) and legal interpretation go to a person.
-- Reviews start when someone posts a PR in the room. A GitHub webhook trigger isn't built yet.
+- The watcher polls GitHub from the machine running Switch, because a local Switch server has no public address for GitHub to send webhooks to. A hosted Switch server could use Switch's GitHub connector instead.
 
 ## Credits
 

@@ -63,7 +63,7 @@ Reading Console's logs and source, which ships as plain JavaScript in `app.asar`
 
 ## What's next
 
-Reviews start when someone posts a PR in the room. Next is a GitHub webhook, so every PR that touches personal data gets a review without anyone asking.
+Nobody has to ask for a review. A small watcher script polls GitHub every minute. When a new PR changes the app's code, it posts `@uvera-dpdp-auditor review PR #N` into the room through a Mattermost incoming webhook, and Switch hands it to the auditor like any other message. A local Switch server has no public address for GitHub webhooks, so polling is the simple fix. Next is narrowing the trigger to the files that handle personal data, and running the room on a hosted Switch server for a whole team.
 
 This is an engineering aid, not legal advice. The auditor says which checks passed and never calls a change compliant. Sector rules and legal interpretation stay with a person.
 
