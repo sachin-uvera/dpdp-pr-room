@@ -12,7 +12,7 @@ So I built **DPDP PR Room**: a team chat room where two AI agents and a person r
 - **`dpdp-fixer`** takes the Critical and High findings, says what it will change, waits for a person to approve, and pushes the smallest fix to the PR's branch. It never merges.
 - **A person** settles anything that needs legal judgment and makes the merge decision.
 
-Someone posts `@uvera-dpdp-auditor review PR #6` in the room. Everything after that happens in one thread: findings, hand-off, fix, re-check and decision. The auditor also keeps a room document, `dpdp-audit-log`, with one entry per verdict.
+Someone posts `@uvera-dpdp-auditor review PR #7` in the room. Everything after that happens in one thread: findings, hand-off, fix, re-check and decision. The auditor also keeps a room document, `dpdp-audit-log`, with one entry per verdict.
 
 ## A prompt is not a gate
 
@@ -26,7 +26,18 @@ So the instruction is the first layer, not the last. The real gate lives in GitH
 
 One detail surprised me. A plain "1 approval required" rule is not enough. Any account with write access can approve, including the bot, so the bot could approve a PR someone else wrote and then merge it. Requiring a code owner's review closes that hole. It also means three accounts take part: the developer who opens the PR, the bot, and the reviewer. GitHub doesn't let a PR's author approve their own PR.
 
-<!-- TODO after the gate test: quote the exact error GitHub returned when the bot ran `gh pr merge` on the unapproved PR. -->
+Then I tested it. In a rehearsal, the fixer pushed its fix as the bot, and the auditor marked the PR ready for human review. Then, as the bot, I tried to merge it:
+
+```
+$ gh pr merge 5 --merge
+X Pull request sachin-uvera/dpdp-pr-room#5 is not mergeable: the base branch policy prohibits the merge.
+
+$ gh pr merge 5 --merge --admin
+GraphQL: Repository rule violations found
+Waiting on code owner review from sachin-uvera.
+```
+
+GitHub names the person it's waiting for. I approved as code owner, merged with the normal button, and the ruleset log recorded the bot's attempt as a fail and my merge as a pass.
 
 ## What the auditor found
 

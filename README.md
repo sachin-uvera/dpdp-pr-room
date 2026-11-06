@@ -97,7 +97,18 @@ You need [Switch Console](https://docs.switchagents.ai/switch-rooms/getting-star
 5. **Create the room.** Go to Templates > Import template, choose `templates/dpdp-pr-room.template.yaml`, then select **Use** and enter your repository URL.
 6. **Start a review.** In the room, post `@uvera-dpdp-auditor review PR #1`. Agent names start with the team prefix you entered, `uvera` by default.
 
-**Check the gate before relying on it.** From the agent account, run `gh pr merge <number> --merge` on an unapproved PR. It must fail.
+**Check the gate before relying on it.** From the agent account, run `gh pr merge <number> --merge` on an unapproved PR. It must fail. On [PR #5](https://github.com/sachin-uvera/dpdp-pr-room/pull/5), after the fixer's push and the auditor's "ready for human review" verdict, the bot got:
+
+```
+$ gh pr merge 5 --merge
+X Pull request sachin-uvera/dpdp-pr-room#5 is not mergeable: the base branch policy prohibits the merge.
+
+$ gh pr merge 5 --merge --admin
+GraphQL: Repository rule violations found
+Waiting on code owner review from sachin-uvera.
+```
+
+The human reviewer then approved and merged it with the normal button. GitHub's ruleset log (Settings > Rules > Insights) shows the bot's attempt as **fail** and the reviewer's merge as **pass**.
 
 ## Running Switch Console on Windows
 
