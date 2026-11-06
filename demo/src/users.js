@@ -13,6 +13,24 @@ export function createUser(store, { name, email }) {
   return id;
 }
 
+export function signupWithKyc(store, input) {
+  const id = createUser(store, input);
+  log("kyc signup", { id });
+  const user = store.get(id);
+  user.phone = input.phone;
+  user.aadhaarLast4 = input.aadhaar && String(input.aadhaar).replace(/\D/g, "").slice(-4);
+  user.marketingOptIn = input.marketingOptIn === true;
+  return id;
+}
+
+export function deleteUser(store, id) {
+  const user = store.get(id);
+  if (!user) return false;
+  store.set(id, { id, createdAt: user.createdAt, deletedAt: new Date().toISOString(), marketingOptIn: false });
+  return true;
+}
+
 export function getUser(store, id) {
-  return store.get(id) ?? null;
+  const user = store.get(id);
+  return user && !user.deletedAt ? user : null;
 }
