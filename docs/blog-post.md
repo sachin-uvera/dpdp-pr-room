@@ -8,11 +8,11 @@ So I built **DPDP PR Room**: a team chat room where two AI agents and a person r
 
 ## Who is in the room
 
-- **`dpdp-auditor`** reads the PR's diff, reviews it with our open-source [DPDP dev skill](https://github.com/sachin-uvera/dpdp-by-uvera), and posts findings with file and line, severity and a fix. It never changes code.
+- **`dpdp-auditor`** reads the PR's diff, reviews it with our open-source [DPDP dev skill](https://github.com/sachin-uvera/dpdp-by-uvera), and posts findings with file and line, the DPDP section or rule, severity and a fix, in the room and as a comment on the PR. It never changes code.
 - **`dpdp-fixer`** takes the Critical and High findings, says what it will change, waits for a person to approve, and pushes the smallest fix to the PR's branch. It never merges.
 - **A person** settles anything that needs legal judgment and makes the merge decision.
 
-Someone posts `@uvera-dpdp-auditor review PR #6` in the room. Everything after that happens in one thread: findings, hand-off, fix, re-check and decision. The auditor also keeps a room document, `dpdp-audit-log`, with one entry per verdict.
+Someone posts `@uvera-dpdp-auditor review PR #7` in the room. Everything after that happens in one thread: findings, hand-off, fix, re-check and decision. The auditor also keeps a room document, `dpdp-audit-log`, with one entry per verdict.
 
 ## A prompt is not a gate
 
@@ -26,17 +26,28 @@ So the instruction is the first layer, not the last. The real gate lives in GitH
 
 One detail surprised me. A plain "1 approval required" rule is not enough. Any account with write access can approve, including the bot, so the bot could approve a PR someone else wrote and then merge it. Requiring a code owner's review closes that hole. It also means three accounts take part: the developer who opens the PR, the bot, and the reviewer. GitHub doesn't let a PR's author approve their own PR.
 
-<!-- TODO after the gate test: quote the exact error GitHub returned when the bot ran `gh pr merge` on the unapproved PR. -->
+Then I tested it. In a rehearsal, the fixer pushed its fix as the bot, and the auditor marked the PR ready for human review. Then, as the bot, I tried to merge it:
+
+```
+$ gh pr merge 5 --merge
+X Pull request sachin-uvera/dpdp-pr-room#5 is not mergeable: the base branch policy prohibits the merge.
+
+$ gh pr merge 5 --merge --admin
+GraphQL: Repository rule violations found
+Waiting on code owner review from sachin-uvera.
+```
+
+GitHub names the person it's waiting for. I approved as code owner, merged with the normal button, and the ruleset log recorded the bot's attempt as a fail and my merge as a pass.
 
 ## What the auditor found
 
 To test it, I planted three problems in a small Node user service: a signup that writes the whole request to the log, marketing opt-in on by default, and a "delete" that only sets `deletedAt`. The PR's tests pass, because tests don't check for privacy problems.
 
-The auditor's verdict on PR #1:
+The auditor's verdict ("S." is a section of the DPDP Act, "R." a rule of the DPDP Rules):
 
-> **BLOCK** · F1 Critical: raw Aadhaar, phone and email logged · F2 Critical: plaintext Aadhaar stored and returned in full · F3 High: marketing consent on by default · F4 High: soft delete keeps personal data · F5 Medium: no consent record · F6 Medium: phone collected with no stated purpose
+> **BLOCK** · F1 Critical: raw Aadhaar, phone and email logged (S.8(5), R.6(1)(a)) · F2 Critical: plaintext Aadhaar stored and returned in full (S.8(5), R.6(1)(a)) · F3 High: marketing consent on by default (S.6(1)) · F4 High: soft delete keeps personal data (S.8(7)(a), S.12(3)) · F5 Medium: no consent record (S.6(10)) · F6 Medium: phone collected with no stated purpose (S.6(1))
 
-It found all three planted problems and three I hadn't planted. It handed F1–F4 to the fixer and left the Medium findings, and the merge, to a person.
+It found all three planted problems and three I hadn't planted. It handed F1–F4 to the fixer and left the Medium findings, and the merge, to a person. It also asked me four questions it couldn't answer itself: whether the service may do Aadhaar-based KYC at all, whether a law such as PMLA requires keeping KYC records after deletion, whether under-18s can sign up, and where the privacy notice is shown. Those are legal calls, and the room is where a person answers them.
 
 ## Running Switch Console on Windows
 
@@ -52,7 +63,7 @@ Reading Console's logs and source, which ships as plain JavaScript in `app.asar`
 
 ## What's next
 
-Reviews start when someone posts a PR in the room. Next is a GitHub webhook, so every PR that touches personal data gets a review without anyone asking.
+Nobody has to ask for a review. A small watcher script polls GitHub every minute. When a new PR changes the app's code, it posts `@uvera-dpdp-auditor review PR #N` into the room through a Mattermost incoming webhook, and Switch hands it to the auditor like any other message. A local Switch server has no public address for GitHub webhooks, so polling is the simple fix. Next is narrowing the trigger to the files that handle personal data, and running the room on a hosted Switch server for a whole team.
 
 This is an engineering aid, not legal advice. The auditor says which checks passed and never calls a change compliant. Sector rules and legal interpretation stay with a person.
 

@@ -8,3 +8,4 @@ Desktop.ini
 .DS_Store
 .vscode/
 .idea/
+.watch-prs-state.json

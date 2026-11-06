@@ -2,7 +2,12 @@
 
 A team chat room where AI agents and a person review pull requests against India's Digital Personal Data Protection Act 2023 and DPDP Rules 2025. Built on [Switch](https://github.com/sandbox-quantum/switch) for the [Flip the Switch Hackathon](https://www.wemakedevs.org/hackathons/switch), Track 01: Best Business Workflow.
 
-**Status: working end to end** on Switch Console 0.40.1 for Windows with a local Switch server and Mattermost. The auditor has reviewed a real pull request ([#1](https://github.com/sachin-uvera/dpdp-pr-room/pull/1)) and handed its findings to the fixer.
+**Status: working end to end** on Switch Console 0.40.1 for Windows, with a local Switch server and Mattermost. On [PR #5](https://github.com/sachin-uvera/dpdp-pr-room/pull/5):
+- the auditor found six DPDP problems with citations
+- the fixer patched four of them as the bot account, after a person approved
+- the auditor re-checked the patch
+- GitHub refused the bot's merge twice
+- a person approved and merged it
 
 **Demo video:** _link to come_
 
@@ -21,10 +26,12 @@ sequenceDiagram
     participant GH as GitHub
     actor Rev as Human reviewer
 
-    Dev->>Room: @uvera-dpdp-auditor review PR #7
+    Dev->>GH: Open a PR that changes demo/
+    Note over Room: The watcher posts @uvera-dpdp-auditor review PR #7
     Room->>Auditor: Mention
     Auditor->>GH: Read the diff
     Auditor->>Room: Findings with file:line and S./R. citations
+    Auditor->>GH: Same findings as a PR comment
     Auditor->>Fixer: Hand off Critical and High findings
     Fixer->>Room: Planned change, asks for approval
     Rev->>Room: Approve the push
@@ -43,29 +50,37 @@ sequenceDiagram
 
 ## What a review looks like
 
-This is the auditor's verdict on [PR #1](https://github.com/sachin-uvera/dpdp-pr-room/pull/1), which adds KYC signup and account deletion to the [`demo/`](demo/) service. The PR's own tests pass.
+This is the auditor's review of [PR #5](https://github.com/sachin-uvera/dpdp-pr-room/pull/5), which adds KYC signup and account deletion to the [`demo/`](demo/) service. The PR's own tests pass. "S." is a section of the DPDP Act 2023; "R." is a rule of the DPDP Rules 2025.
 
-> **2026-11-06 · PR #1 · `7aed660` · BLOCK**
->
-> - **F1 Critical:** raw Aadhaar, phone and email written to the log (`users.js:17`)
-> - **F2 Critical:** the full Aadhaar number is stored and returned in plaintext (`users.js:21, 35`)
-> - **F3 High:** marketing consent is on by default (`users.js:22`)
-> - **F4 High:** deletion only sets `deletedAt`, so the personal data stays (`users.js:26-31`)
-> - **F5 Medium:** no consent record
-> - **F6 Medium:** phone number collected with no stated purpose
->
-> F1–F4 handed to the fixer. Merge decision: pending (person).
+| # | Finding | Evidence | Law | Severity |
+|---|---|---|---|---|
+| F1 | The full signup input, including Aadhaar, phone and email, is logged raw, skipping the masking logger | `users.js:17` | S.8(5), R.6(1)(a) | Critical |
+| F2 | The Aadhaar number is stored in plaintext and returned in full | `users.js:21, 35` | S.8(5), R.6(1)(a) | Critical |
+| F3 | Marketing consent is on when the user gave no answer | `users.js:22` | S.6(1) | High |
+| F4 | Deletion only sets `deletedAt`; all personal data stays | `users.js:26-31` | S.8(7)(a), S.12(3) | High |
+| F5 | No consent record for marketing | `users.js:22` | S.6(10) | Medium |
+| F6 | Phone number collected with no stated purpose | `users.js:20` | S.6(1) | Medium |
+
+Every finding also names the fix. The auditor handed F1–F4 to the fixer and raised four questions for the human reviewer: whether the service may do Aadhaar-based KYC under the Aadhaar Act, whether a law such as PMLA requires keeping KYC records after deletion, whether under-18s can sign up (S.9), and where the S.5(1)/R.3 notice is shown.
+
+The fixer's commit `f29797f` logged only the id, kept just the last 4 Aadhaar digits, made opt-in explicit and removed personal data on delete. On re-review, the auditor closed F1–F4, left F5 and F6 open for a follow-up, and ended with `VERDICT PR #5: READY FOR HUMAN REVIEW`.
 
 Three problems were planted: the log line, the default opt-in and the soft delete. The auditor also found F2, F5 and F6.
 
 ## Why this needs Switch
 
-- **One room:** the findings, the fix, the re-check and the human decision stay in one thread.
-- **Agent hand-offs:** the auditor passes work to the fixer by name, without a person relaying it.
-- **Separate permissions:** anyone in the room can ask the auditor, but only the owner and their agents can direct the fixer.
-- **Audit trail:** the `dpdp-audit-log` room document records each verdict, commit and open finding.
+A GitHub Action could run the same review and comment on the PR. The auditor here does that too. What an Action can't do is the part where people and agents work together while the fix is happening:
 
-The workflow is the template in [`templates/dpdp-pr-room.template.yaml`](templates/dpdp-pr-room.template.yaml). Without Switch there is no room, hand-off or log.
+| In this room | What Switch provides | With a GitHub Action alone |
+|---|---|---|
+| The fixer asks before each command, and a person clicks **Allow once** in chat | Permission requests from a running agent, answered in chat | The job runs start to finish; nobody can approve a step midway |
+| The auditor hands F1–F4 to the fixer by name, and re-checks its commit | Agents addressing each other in one room | Separate jobs with no conversation; a person relays the results |
+| Anyone in the room can ask the auditor, but only the owner and their agents can direct the fixer | Per-agent `addressing` | Whoever can push or comment triggers everything |
+| The auditor asks the reviewer about Aadhaar KYC and PMLA retention, and the answer shapes the fix | A person in the same thread as the agents | Questions sit in a PR comment until someone reruns the job |
+| `dpdp-audit-log` keeps one entry per verdict, commit and decision | Room documents the agents write | Logs scattered across workflow runs |
+| The same room works on Mattermost, Slack or Discord | The `bridge` parameter in the template | A different integration per chat app |
+
+The workflow is the template in [`templates/dpdp-pr-room.template.yaml`](templates/dpdp-pr-room.template.yaml). Take Switch away and you lose the live approvals, the hand-off and the shared thread. What's left is a review bot.
 
 ## What actually enforces the approval
 
@@ -77,11 +92,24 @@ Switch doesn't enforce an instruction like "don't merge". [Its docs](https://doc
 
 Three GitHub accounts take part: the developer who opens the PR, the agents' bot account, and the human reviewer who owns the code. GitHub doesn't let a PR's author approve their own PR, so the reviewer can't be the author.
 
-**The admin bypass is a person's choice, and it's logged.** On a PR page, an admin sees "Merge without waiting for requirements". That's how PR #1 was merged by mistake, with its findings unfixed. GitHub recorded it as a bypass by the admin under Settings > Rules > Insights, and it was reverted in a follow-up PR. The bot can't do this, because it isn't an admin. If you want no bypass at all, empty the bypass list and add a second code owner to approve maintenance PRs.
+**The admin bypass is a person's choice, and it's logged.** On a PR page, an admin sees "Merge without waiting for requirements". The bot can't do this, because it isn't an admin. In this repository, GitHub's ruleset log (Settings > Rules > Insights) shows two kinds of bypass, all by the human admin:
+
+- **On purpose:** maintenance PRs the reviewer wrote (docs, template fixes and reverts: #2, #3, #4, #6). The reviewer is the only code owner and can't approve their own PR.
+- **By mistake:** [PR #1](https://github.com/sachin-uvera/dpdp-pr-room/pull/1) was merged with its findings unfixed, then reverted in [PR #4](https://github.com/sachin-uvera/dpdp-pr-room/pull/4).
+
+That mistake is why the bypass list matters. If you want no bypass at all, empty the bypass list and add a second code owner to approve maintenance PRs.
 
 ## Run it
 
-You need [Switch Console](https://docs.switchagents.ai/switch-rooms/getting-started/install-switch-console), Docker, Claude Code, the GitHub CLI and three GitHub accounts (developer, agent bot, reviewer). The Windows build of Console is in early access.
+**Quick check, without Switch** (Node 22+, plus the GitHub CLI for the last command):
+
+```sh
+cd demo && npm test && cd ..             # the demo service's tests
+node --test scripts/watch-prs.test.mjs   # the PR watcher's selection logic
+node scripts/watch-prs.mjs --dry-run     # which open PRs the watcher would send to the auditor
+```
+
+The full room needs everything below. You need [Switch Console](https://docs.switchagents.ai/switch-rooms/getting-started/install-switch-console), Docker, Claude Code, the GitHub CLI and three GitHub accounts (developer, agent bot, reviewer). The Windows build of Console is in early access.
 
 1. **Set up the target repository.** It should be public, because GitHub Free doesn't enforce rulesets on private repositories. Give the agent bot account write access, not admin, and list the reviewer in `.github/CODEOWNERS`.
 2. **Add the ruleset.** Go to Settings > Rules > Rulesets > New branch ruleset and target the default branch. Turn on "Require a pull request before merging" with 1 approval, "Require review from Code Owners", "Dismiss stale approvals when new commits are pushed" and "Require approval of the most recent reviewable push". Block force pushes and deletion. In the bypass list, allow only Repository admin, for pull requests only.
@@ -95,9 +123,34 @@ You need [Switch Console](https://docs.switchagents.ai/switch-rooms/getting-star
    git config user.name <bot>
    ```
 5. **Create the room.** Go to Templates > Import template, choose `templates/dpdp-pr-room.template.yaml`, then select **Use** and enter your repository URL.
-6. **Start a review.** In the room, post `@uvera-dpdp-auditor review PR #1`. Agent names start with the team prefix you entered, `uvera` by default.
+6. **Start reviews automatically.** Create an incoming webhook for the room in Mattermost, as your own user. With Console's local server, you can do it without a password:
 
-**Check the gate before relying on it.** From the agent account, run `gh pr merge <number> --merge` on an unapproved PR. It must fail.
+   ```sh
+   docker exec switchdash-local-mattermost-mattermost-1 mmctl --local webhook create-incoming \
+     --channel switch:uvera-dpdp-review --user <your Mattermost username> \
+     --display-name "DPDP PR watcher" --lock-to-channel
+   ```
+
+   Put `DPDP_WEBHOOK_URL=http://127.0.0.1:<mattermost port>/hooks/<id>` in a file outside the repo, then start the watcher:
+
+   ```sh
+   node --env-file=../dpdp-watcher.env scripts/watch-prs.mjs
+   ```
+
+   Every minute, it lists open PRs with `gh`. When a new one changes `demo/`, it posts `@uvera-dpdp-auditor review PR #N` in the room. Switch passes that to the auditor like any message from you. On its first run, it marks PRs that are already open as seen. Use `--dry-run` to see what it would post, `DPDP_WATCH_PATHS` to watch other folders, and `DPDP_POLL_SECONDS` to poll faster. You can also start a review by hand: post `@uvera-dpdp-auditor review PR #<n>`. Agent names start with the team prefix you entered, `uvera` by default.
+
+**Check the gate before relying on it.** From the agent account, run `gh pr merge <number> --merge` on an unapproved PR. It must fail. On [PR #5](https://github.com/sachin-uvera/dpdp-pr-room/pull/5), after the fixer's push and the auditor's "ready for human review" verdict, the bot got:
+
+```
+$ gh pr merge 5 --merge
+X Pull request sachin-uvera/dpdp-pr-room#5 is not mergeable: the base branch policy prohibits the merge.
+
+$ gh pr merge 5 --merge --admin
+GraphQL: Repository rule violations found
+Waiting on code owner review from sachin-uvera.
+```
+
+The human reviewer then approved and merged it with the normal button. GitHub's ruleset log (Settings > Rules > Insights) shows the bot's attempt as **fail** and the reviewer's merge as **pass**.
 
 ## Running Switch Console on Windows
 
@@ -111,8 +164,8 @@ Console's Windows build is in early access. These are the problems we hit with 0
 
 ## Demo
 
-1. The developer opens a PR against the small user service in [`demo/`](demo/) with planted problems: an Aadhaar number in a log line, a signup with no consent record, and a delete handler that leaves the data in place. `cd demo && npm test` runs its tests with Node's built-in runner.
-2. The auditor posts cited findings and blocks the PR.
+1. The developer opens a PR against the small user service in [`demo/`](demo/) with planted problems: the whole signup, including the Aadhaar number, written to the log; marketing consent on by default; and a delete that leaves the data in place. The PR's tests still pass.
+2. The watcher posts the PR into the room, and the auditor posts cited findings there and on the PR, and blocks it.
 3. The fixer patches the PR branch after a person approves the push, and the auditor re-checks it.
 4. The agent tries to merge and GitHub refuses.
 5. A person approves on GitHub and merges, and the log records it.
@@ -124,9 +177,11 @@ Console's Windows build is in early access. These are the problems we hit with 0
 
 - This is an engineering aid, not legal advice. It reports which checks passed and never says a change is legally compliant.
 - Sector rules (RBI, SEBI, IRDAI, health, telecom) and legal interpretation go to a person.
-- Reviews start when someone posts a PR in the room. A GitHub webhook trigger isn't built yet.
+- The watcher polls GitHub from the machine running Switch, because a local Switch server has no public address for GitHub to send webhooks to. A hosted Switch server could use Switch's GitHub connector instead.
+- The watcher's webhook posts in the room as the person who created it, and the agents act on those posts. Anyone who has the webhook URL can therefore direct both agents. Keep the URL out of the repository; this project keeps it in a file outside the clone. The webhook is locked to the review room, and a merge still needs the code owner's approval on GitHub.
+- The auditor runs in auto mode, so it uses `gh` without asking. Its instructions limit it to reading and commenting, but the bot account's write access is what really limits it. Give the auditor a read-only token if you want that enforced too.
 
 ## Credits
 
 - [Switch](https://github.com/sandbox-quantum/switch) by SandboxAQ provides the rooms, agent hand-offs and chat bridge.
-- The DPDP dev skill is by [Uvera Innovation Hub](https://uvera.tech), under the MIT licence.
+- The DPDP dev skill is by [Uvera Innovation Hub](https://uvera.tech), under the MIT licence. It existed before this hackathon (last updated 29 September 2026) and is used here unchanged, as the auditor's reference. Everything in this repository was built for the hackathon.
