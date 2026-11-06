@@ -14,7 +14,7 @@ So I built **DPDP PR Room**: a team chat room where two AI agents and a person r
 - **`dpdp-fixer`** takes the Critical and High findings, says what it will change, waits for a person to approve, and pushes the smallest fix to the PR's branch. It never merges.
 - **A person** settles anything that needs legal judgment and makes the merge decision.
 
-Someone posts `@uvera-dpdp-auditor review PR #7` in the room. Everything after that happens in one thread: findings, hand-off, fix, re-check and decision. The auditor also keeps a room document, `dpdp-audit-log`, with one entry per verdict.
+When a PR changes the app's code, a small watcher posts `@uvera-dpdp-auditor review PR #7` in the room. Everything after that happens in one thread: findings, hand-off, fix, re-check and decision. The auditor also keeps a room document, `dpdp-audit-log`, with one entry per verdict.
 
 ## A prompt is not a gate
 
@@ -39,7 +39,7 @@ GraphQL: Repository rule violations found
 Waiting on code owner review from sachin-uvera.
 ```
 
-![The bot's merge, refused by GitHub](https://raw.githubusercontent.com/sachin-uvera/dpdp-pr-room/main/docs/img/merge-refused.png)
+![The same refusal in the demo video: the bot's merge of PR #8 with --admin](https://raw.githubusercontent.com/sachin-uvera/dpdp-pr-room/main/docs/img/merge-refused.png)
 
 GitHub names the person it's waiting for. I approved as code owner, merged with the normal button, and the ruleset log recorded the bot's attempt as a fail and my merge as a pass.
 
