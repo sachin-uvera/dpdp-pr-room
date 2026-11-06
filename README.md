@@ -61,6 +61,8 @@ This is the auditor's review of [PR #5](https://github.com/sachin-uvera/dpdp-pr-
 | F5 | No consent record for marketing | `users.js:22` | S.6(10) | Medium |
 | F6 | Phone number collected with no stated purpose | `users.js:20` | S.6(1) | Medium |
 
+![The auditor's findings for PR #7 in the Switch room, with the Law column](docs/img/findings.png)
+
 Every finding also names the fix. The auditor handed F1–F4 to the fixer and raised four questions for the human reviewer: whether the service may do Aadhaar-based KYC under the Aadhaar Act, whether a law such as PMLA requires keeping KYC records after deletion, whether under-18s can sign up (S.9), and where the S.5(1)/R.3 notice is shown.
 
 The fixer's commit `f29797f` logged only the id, kept just the last 4 Aadhaar digits, made opt-in explicit and removed personal data on delete. On re-review, the auditor closed F1–F4, left F5 and F6 open for a follow-up, and ended with `VERDICT PR #5: READY FOR HUMAN REVIEW`.
@@ -80,6 +82,8 @@ A GitHub Action could run the same review and comment on the PR. The auditor her
 | `dpdp-audit-log` keeps one entry per verdict, commit and decision | Room documents the agents write | Logs scattered across workflow runs |
 | The same room works on Mattermost, Slack or Discord | The `bridge` parameter in the template | A different integration per chat app |
 
+![The fixer stops and asks permission in the room thread: Allow once, Allow for this session, or Decline](docs/img/allow-once.png)
+
 The workflow is the template in [`templates/dpdp-pr-room.template.yaml`](templates/dpdp-pr-room.template.yaml). Take Switch away and you lose the live approvals, the hand-off and the shared thread. What's left is a review bot.
 
 ## What actually enforces the approval
@@ -94,7 +98,7 @@ Three GitHub accounts take part: the developer who opens the PR, the agents' bot
 
 **The admin bypass is a person's choice, and it's logged.** On a PR page, an admin sees "Merge without waiting for requirements". The bot can't do this, because it isn't an admin. In this repository, GitHub's ruleset log (Settings > Rules > Insights) shows two kinds of bypass, all by the human admin:
 
-- **On purpose:** maintenance PRs the reviewer wrote (docs, template fixes and reverts: #2, #3, #4, #6). The reviewer is the only code owner and can't approve their own PR.
+- **On purpose:** maintenance PRs the reviewer wrote (docs, template fixes and reverts: #2, #3, #4, #6, #8). The reviewer is the only code owner and can't approve their own PR.
 - **By mistake:** [PR #1](https://github.com/sachin-uvera/dpdp-pr-room/pull/1) was merged with its findings unfixed, then reverted in [PR #4](https://github.com/sachin-uvera/dpdp-pr-room/pull/4).
 
 That mistake is why the bypass list matters. If you want no bypass at all, empty the bypass list and add a second code owner to approve maintenance PRs.
@@ -150,7 +154,21 @@ GraphQL: Repository rule violations found
 Waiting on code owner review from sachin-uvera.
 ```
 
-The human reviewer then approved and merged it with the normal button. GitHub's ruleset log (Settings > Rules > Insights) shows the bot's attempt as **fail** and the reviewer's merge as **pass**.
+The human reviewer then approved and merged it with the normal button. The same check in the demo video, run as the bot on [PR #8](https://github.com/sachin-uvera/dpdp-pr-room/pull/8):
+
+![The bot's gh pr merge --admin is refused: Repository rule violations found](docs/img/merge-refused.png)
+
+GitHub's ruleset log records every attempt on `main`. It's under Settings > Rules > Insights, which only admins can see, so here are the entries for these merges (times in IST):
+
+| Time (6 Nov 2026) | Account | Result | What it was |
+|---|---|---|---|
+| 15:44:57 | Sachin8 (agents' bot) | **fail** | Merge PR #5 before approval |
+| 15:49:00 | sachin-uvera (code owner) | **pass** | Merge PR #5 after approving |
+| 18:31:29 | sachin-uvera (code owner) | **pass** | Merge PR #7 after approving |
+| 18:39:58 | Sachin8 (agents' bot) | **fail** | Merge PR #8 (demo video) |
+| 18:40:38 | Sachin8 (agents' bot) | **fail** | Merge PR #8 with `--admin` (demo video) |
+
+Every other entry in the log is an admin bypass by the code owner. They're listed under "The admin bypass" above.
 
 ## Running Switch Console on Windows
 
@@ -170,7 +188,7 @@ Console's Windows build is in early access. These are the problems we hit with 0
 4. The agent tries to merge and GitHub refuses.
 5. A person approves on GitHub and merges, and the log records it.
 
-<!-- Screenshots: add docs/img/findings.png, docs/img/merge-refused.png and docs/img/audit-log.png after recording -->
+![The dpdp-audit-log entries for PR #7: the re-review with open findings, then the merge decision recorded with who approved it](docs/img/audit-log.png)
 
 
 ## Limits
